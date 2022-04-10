@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call<Products>, response: Response<Products>) {
                 val responseBody = response.body()
                 if (response.isSuccessful && responseBody != null) {
+                    println("Aha")
                     println(responseBody.products)
 
                     val recyclerview = findViewById<RecyclerView>(R.id.recycler)

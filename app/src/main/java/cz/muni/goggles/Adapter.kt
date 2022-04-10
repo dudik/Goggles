@@ -26,9 +26,14 @@ class Adapter(private val list : List<Game>) : RecyclerView.Adapter<Adapter.View
         println(ItemsViewModel.coverHorizontal)
 
         holder.textView.text = ItemsViewModel.title
-        holder.priceView.text = ItemsViewModel.price.final
 
-        if (ItemsViewModel.price.discount != null) {
+        if (ItemsViewModel.price != null)
+            holder.priceView.text = ItemsViewModel.price.final
+        else {
+            holder.priceView.text = "Coming soon"
+        }
+
+        if (ItemsViewModel.price?.discount != null) {
             holder.discountView.text = ItemsViewModel.price.discount
             holder.discountView.visibility = View.VISIBLE
         } else {
@@ -44,9 +49,6 @@ class Adapter(private val list : List<Game>) : RecyclerView.Adapter<Adapter.View
             i.putExtra("slug", ItemsViewModel.slug)
             context.startActivity(i)
         }
-
-        println(ItemsViewModel.title)
-
     }
 
     override fun getItemCount(): Int {
