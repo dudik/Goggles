@@ -3,6 +3,7 @@ package cz.muni.goggles
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import com.google.android.material.snackbar.Snackbar
@@ -11,7 +12,6 @@ import cz.muni.goggles.databinding.ActivityGameDetailBinding
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import retrofit2.*
 import java.io.IOException
 
 
@@ -61,13 +61,16 @@ class GameDetailActivity : AppCompatActivity() {
 
         val message = intent.getStringExtra("title")
 
-        this.setTitle(message)
+        this.title = message
 
         setSupportActionBar(findViewById(R.id.toolbar))
         binding.toolbarLayout.title = title
         binding.fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
+        }
+        binding.toolbar.setNavigationOnClickListener {
+            finish()
         }
     }
 }
