@@ -52,6 +52,31 @@ class MainActivity : AppCompatActivity() {
         val search = menu?.findItem(R.id.nav_search)
         val searchView = search?.actionView as SearchView
 
+        searchView.setOnCloseListener {
+            val result = service.getSearchByName("").
+            enqueue(object : Callback<Products> {
+                override fun onResponse(call: Call<Products>, response: Response<Products>) {
+                    val responseBody = response.body()
+                    if (response.isSuccessful && responseBody != null) {
+                        println("Aha")
+                        println(responseBody.products)
+
+                        val recyclerview = findViewById<RecyclerView>(R.id.recycler)
+                        recyclerview.layoutManager = GridLayoutManager(this@MainActivity, 2)
+
+                        val adapter = Adapter(responseBody.products)
+
+                        recyclerview.adapter = adapter
+                    }
+                }
+
+                override fun onFailure(call: Call<Products>, t: Throwable) {
+                    Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+            false
+        }
+
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 val result = service.getSearchByName("like:" + p0).
