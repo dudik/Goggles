@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="initial_price_range_values">
+        <item>0.0</item>
+        <item>150.0</item>
+    </array>
+    <string-array name="currencies">
+        <item>EUR</item>
+        <item>USD</item>
+    </string-array>
+</resources>
