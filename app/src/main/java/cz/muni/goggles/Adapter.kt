@@ -10,7 +10,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
 
 
-class Adapter(private val list : List<Game>) : RecyclerView.Adapter<Adapter.ViewHolder>() {
+class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
+
+    private val list = mutableListOf<Game>()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.card_layout, parent, false)
@@ -53,6 +56,12 @@ class Adapter(private val list : List<Game>) : RecyclerView.Adapter<Adapter.View
 
     override fun getItemCount(): Int {
         return list.size
+    }
+
+    fun setItems(games: List<Game>) {
+        list.clear()
+        list.addAll(games)
+        notifyDataSetChanged()
     }
 
     class ViewHolder(ItemView: View) : RecyclerView.ViewHolder(ItemView) {
