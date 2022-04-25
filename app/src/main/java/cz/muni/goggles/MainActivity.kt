@@ -1,6 +1,11 @@
 package cz.muni.goggles
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -12,6 +17,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import com.google.android.material.slider.RangeSlider
 import retrofit2.Call
 import retrofit2.Callback
@@ -20,6 +28,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.text.NumberFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private val retrofit: Retrofit = Retrofit.Builder()
@@ -36,9 +45,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: Adapter
     private var upcoming = false
 
+    private val channelId = "channelID"
+    private val channelName = "Subscription"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        createNotificationChannel()
 
         val recyclerView = findViewById<RecyclerView>(R.id.recycler)
         recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 2)
@@ -65,6 +78,15 @@ class MainActivity : AppCompatActivity() {
             upcoming = checked
             refresh()
         }
+
+        val priceCheckWorkRequest: WorkRequest =
+            PeriodicWorkRequestBuilder<PriceCheckWorker>(10,TimeUnit.SECONDS)
+                .build()
+
+        WorkManager
+            .getInstance(this)
+            .enqueue(priceCheckWorkRequest)
+
     }
 
     override fun onResume() {
@@ -87,12 +109,12 @@ class MainActivity : AppCompatActivity() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 refresh()
-                return false;
+                return false
             }
 
             override fun onQueryTextChange(p0: String?): Boolean {
                 query = p0 ?: ""
-                return false;
+                return false
             }
 
         })
@@ -137,5 +159,18 @@ class MainActivity : AppCompatActivity() {
             numberFormat.format(priceRangeSlider.values[0]),
             numberFormat.format(priceRangeSlider.values[1])
         )
+    }
+
+    private fun createNotificationChannel(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT)
+                .apply {
+                    lightColor = Color.BLUE
+                    enableLights(true)
+                    enableVibration(true)
+                }
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
     }
 }

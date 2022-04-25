@@ -52,6 +52,10 @@
         android:layout_marginEnd="@dimen/fab_margin"
         app:layout_anchor="@id/app_bar"
         app:layout_anchorGravity="bottom|end"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        android:src="@drawable/ic_baseline_notifications_none_24"
+        android:backgroundTint="@color/purple_500"
+        app:tint="@android:color/white"
+        app:maxImageSize="32dp"
+         />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

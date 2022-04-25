@@ -50,6 +50,7 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
             i.putExtra("title", ItemsViewModel.title)
             i.putExtra("image", ItemsViewModel.coverHorizontal)
             i.putExtra("slug", ItemsViewModel.slug)
+            i.putExtra("productId", ItemsViewModel.id)
             context.startActivity(i)
         }
     }
