@@ -1,4 +1,4 @@
-package cz.muni.goggles
+package cz.muni.goggles.worker
 
 import android.content.Context
 import android.util.Log
@@ -6,9 +6,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import cz.muni.goggles.R
 import cz.muni.goggles.database.SGameDatabase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
@@ -21,7 +20,6 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Wor
 
     val tag = "PriceCheckWorker"
     val context = appContext
-    private val applicationScope = CoroutineScope(SupervisorJob())
 
     override fun doWork(): Result {
 
@@ -30,7 +28,7 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Wor
 
         val client = OkHttpClient()
 
-        val gamesForCheck = SGameDatabase.getDatabase(context,applicationScope).sGameDao().getAll()
+        val gamesForCheck = SGameDatabase.getDatabase(context).sGameDao().getAll()
         val countDownLatch = CountDownLatch(gamesForCheck.size)
         for (game in gamesForCheck)
         {

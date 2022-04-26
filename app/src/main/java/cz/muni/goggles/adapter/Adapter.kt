@@ -1,4 +1,4 @@
-package cz.muni.goggles
+package cz.muni.goggles.adapter
 
 import android.content.Intent
 import android.view.LayoutInflater
@@ -8,6 +8,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
+import cz.muni.goggles.classes.Game
+import cz.muni.goggles.R
+import cz.muni.goggles.activities.GameDetailActivity
 
 
 class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
@@ -43,7 +46,7 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
             holder.discountView.visibility = View.GONE
         }
 
-        val context = holder.itemView.getContext()
+        val context = holder.itemView.context
 
         holder.itemView.setOnClickListener {
             val i = Intent(context, GameDetailActivity::class.java)
@@ -51,6 +54,7 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
             i.putExtra("image", ItemsViewModel.coverHorizontal)
             i.putExtra("slug", ItemsViewModel.slug)
             i.putExtra("productId", ItemsViewModel.id)
+            i.putExtra("price", ItemsViewModel.price.final)
             context.startActivity(i)
         }
     }

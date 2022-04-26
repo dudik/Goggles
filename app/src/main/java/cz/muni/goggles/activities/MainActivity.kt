@@ -1,4 +1,4 @@
-package cz.muni.goggles
+package cz.muni.goggles.activities
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -17,10 +17,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkRequest
+import androidx.work.*
 import com.google.android.material.slider.RangeSlider
+import cz.muni.goggles.*
+import cz.muni.goggles.R
+import cz.muni.goggles.adapter.Adapter
+import cz.muni.goggles.classes.Products
+import cz.muni.goggles.worker.PriceCheckWorker
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -80,7 +83,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         val priceCheckWorkRequest: WorkRequest =
-            PeriodicWorkRequestBuilder<PriceCheckWorker>(10,TimeUnit.SECONDS)
+            PeriodicWorkRequestBuilder<PriceCheckWorker>(4,TimeUnit.HOURS)
+                .addTag("PRICE_CHECK")
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .build()
 
         WorkManager

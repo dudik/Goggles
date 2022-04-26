@@ -1,5 +1,6 @@
 package cz.muni.goggles
 
+import cz.muni.goggles.classes.Products
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query

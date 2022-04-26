@@ -4,10 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import kotlinx.coroutines.CoroutineScope
 
 @Database(entities = [SGame::class], version = 1, exportSchema = false)
-public abstract class SGameDatabase : RoomDatabase() {
+abstract class SGameDatabase : RoomDatabase() {
 
     abstract fun sGameDao(): SGameDao
 
@@ -16,7 +15,7 @@ public abstract class SGameDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: SGameDatabase? = null
 
-        fun getDatabase(context: Context, scope: CoroutineScope): SGameDatabase {
+        fun getDatabase(context: Context): SGameDatabase {
             // if the INSTANCE is not null, then return it,
             // if it is, then create the database
             return INSTANCE ?: synchronized(this) {

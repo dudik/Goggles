@@ -1,4 +1,4 @@
-package cz.muni.goggles
+package cz.muni.goggles.classes
 
 data class Game (
     val title: String,
