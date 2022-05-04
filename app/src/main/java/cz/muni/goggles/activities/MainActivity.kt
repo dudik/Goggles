@@ -27,7 +27,6 @@ import cz.muni.goggles.api.ProductIdApi
 import cz.muni.goggles.classes.Game
 import cz.muni.goggles.classes.Price
 import cz.muni.goggles.classes.Products
-import cz.muni.goggles.classes.ResultPrices
 import cz.muni.goggles.database.SGameDatabase
 import cz.muni.goggles.worker.PriceCheckWorker
 import okhttp3.OkHttpClient
@@ -38,10 +37,8 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
-import java.net.URL
 import java.text.NumberFormat
 import java.util.*
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -66,6 +63,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var context: Context
     private var upcoming = false
     private var following = false
+    private var isStartedFromNotification = false
 
     private val channelId = "channelID"
     private val channelName = "Subscription"
@@ -78,6 +76,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         createNotificationChannel()
+        val checkboxUpcoming = findViewById<CheckBox>(R.id.checkBoxUpcoming)
+        val checkboxFollowing = findViewById<CheckBox>(R.id.checkBoxFollowing)
+
+        val extras = intent.extras
+        if (extras != null){
+            isStartedFromNotification = extras.getBoolean("fromNotification")
+        }
+        if (isStartedFromNotification){
+            checkboxFollowing.isChecked = true
+            following = true
+        }
 
         context = applicationContext
         val recyclerView = findViewById<RecyclerView>(R.id.recycler)
@@ -101,7 +110,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        val checkboxUpcoming = findViewById<CheckBox>(R.id.checkBoxUpcoming)
+
         checkboxUpcoming.setOnCheckedChangeListener { _, checked ->
             upcoming = checked
             if (following)
@@ -113,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val checkboxFollowing = findViewById<CheckBox>(R.id.checkBoxFollowing)
+
         checkboxFollowing.setOnCheckedChangeListener { _, checked ->
             following = checked
             getFollowing(following)

@@ -1,12 +1,16 @@
 package cz.muni.goggles.worker
 
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import cz.muni.goggles.R
+import cz.muni.goggles.activities.MainActivity
 import cz.muni.goggles.database.SGameDatabase
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -70,18 +74,34 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Wor
         }
         countDownLatch.await()
 
+        // Create an Intent for the activity you want to start
+        val resultIntent = Intent(context, MainActivity::class.java)
+        resultIntent.putExtra("fromNotification", true)
+        // Create the TaskStackBuilder
+        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(context).run {
+            // Add the intent, which inflates the back stack
+            addNextIntentWithParentStack(resultIntent)
+            // Get the PendingIntent containing the entire back stack
+            getPendingIntent(0,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
+
+
         Log.i(tag, "Is Empty: ${finalGames.isNotEmpty()}")
         Log.i(tag, "Is Empty: ${finalGames.joinToString(", ")}")
         if (finalGames.isNotEmpty()) {
             val notification = NotificationCompat.Builder(context, channelId)
+                .setContentIntent(resultPendingIntent)
                 .setContentTitle("Great price")
                 .setContentText("Buy ${finalGames.joinToString(", ") } now")
                 .setSmallIcon(R.drawable.ic_baseline_notifications_24)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build()
 
-            val notificationManager = NotificationManagerCompat.from(context)
-            notificationManager.notify(notificationId,notification)
+            with(NotificationManagerCompat.from(context)) {
+                notify(notificationId, notification)
+            }
         }
 
         return Result.success()
