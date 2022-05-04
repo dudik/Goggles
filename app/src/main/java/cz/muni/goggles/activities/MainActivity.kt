@@ -22,7 +22,12 @@ import com.google.android.material.slider.RangeSlider
 import cz.muni.goggles.*
 import cz.muni.goggles.R
 import cz.muni.goggles.adapter.Adapter
+import cz.muni.goggles.classes.Game
 import cz.muni.goggles.classes.Products
+import cz.muni.goggles.database.SGame
+import cz.muni.goggles.database.SGameDao
+import cz.muni.goggles.database.SGameDatabase
+import cz.muni.goggles.database.SGameRepository
 import cz.muni.goggles.worker.PriceCheckWorker
 import retrofit2.Call
 import retrofit2.Callback
@@ -39,27 +44,38 @@ class MainActivity : AppCompatActivity() {
         .addConverterFactory(MoshiConverterFactory.create())
         .build()
 
+    private val retrofitGog: Retrofit = Retrofit.Builder()
+        .baseUrl("https://api.gog.com/")
+        .addConverterFactory(MoshiConverterFactory.create())
+        .build()
+
     private val service: Api = retrofit.create(Api::class.java)
+    private val gogService: GogApi = retrofitGog.create(GogApi::class.java)
     private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     private var query: String = ""
     private lateinit var priceTextView: TextView
     private lateinit var priceRangeSlider: RangeSlider
     private lateinit var adapter: Adapter
+    private lateinit var context: Context
     private var upcoming = false
+    private var following = false
 
     private val channelId = "channelID"
     private val channelName = "Subscription"
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         createNotificationChannel()
 
+        context = applicationContext
         val recyclerView = findViewById<RecyclerView>(R.id.recycler)
         recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 2)
         adapter = Adapter()
         recyclerView.adapter = adapter
+
 
         priceRangeSlider = findViewById(R.id.priceRangeSlider)
         priceTextView = findViewById(R.id.priceTextView)
@@ -76,10 +92,16 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        val checkbox = findViewById<CheckBox>(R.id.checkBox)
-        checkbox.setOnCheckedChangeListener { _, checked ->
+        val checkboxUpcoming = findViewById<CheckBox>(R.id.checkBoxUpcoming)
+        checkboxUpcoming.setOnCheckedChangeListener { _, checked ->
             upcoming = checked
             refresh()
+        }
+
+        val checkboxFollowing = findViewById<CheckBox>(R.id.checkBoxFollowing)
+        checkboxFollowing.setOnCheckedChangeListener { _, checked ->
+            following = checked
+            getFollowing()
         }
 
         val priceCheckWorkRequest: WorkRequest =
@@ -135,24 +157,59 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refresh() {
-        service.getSearchByName(
-            sharedPreferences.getString("currency", "EUR") ?: "EUR",
-            if (query.isBlank()) null else "like:$query",
-            "between%3A${priceRangeSlider.values[0]}%2C${priceRangeSlider.values[1]}",
-            if (upcoming) "in:upcoming" else null
-        ).enqueue(object : Callback<Products> {
-            override fun onResponse(call: Call<Products>, response: Response<Products>) {
-                val responseBody = response.body()
-                if (response.isSuccessful && responseBody != null) {
-                    println(responseBody.products)
-                    adapter.setItems(responseBody.products)
+            service.getSearchByName(
+                sharedPreferences.getString("currency", "EUR") ?: "EUR",
+                if (query.isBlank()) null else "like:$query",
+                "between%3A${priceRangeSlider.values[0]}%2C${priceRangeSlider.values[1]}",
+                if (upcoming) "in:upcoming" else null
+            ).enqueue(object : Callback<Products> {
+                override fun onResponse(call: Call<Products>, response: Response<Products>) {
+                    val responseBody = response.body()
+                    if (response.isSuccessful && responseBody != null) {
+                        println(responseBody.products)
+                        adapter.setItems(responseBody.products)
+                    }
                 }
-            }
 
-            override fun onFailure(call: Call<Products>, t: Throwable) {
-                Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+                override fun onFailure(call: Call<Products>, t: Throwable) {
+                    println(t.message)
+                    Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+
+    }
+
+    private fun getFollowing() {
+        val games = SGameDatabase.getDatabase(context).sGameDao().getAll()
+        val gamesList:MutableList<Game> = mutableListOf<Game>()
+        for (game in games) {
+            gogService.getProductsByIds(
+                game.productId.toString()
+            ).enqueue(object : Callback<Game> {
+                override fun onResponse(call: Call<Game>, response: Response<Game>) {
+                    print(call.request().toString())
+                    val responseBody = response.body()
+                    println("SPM TU")
+                    println(responseBody)
+                    if (response.isSuccessful && responseBody != null) {
+                        println(responseBody)
+                        gamesList.add(responseBody)
+                        adapter.setItems(gamesList)
+                    }
+
+                }
+
+                override fun onFailure(call: Call<Game>, t: Throwable) {
+                    println("SPM TU FAIL")
+                    println(t.message)
+                    Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
+                }
+
+
+            })
+
+        }
+
     }
 
     private fun updatePrice() {
