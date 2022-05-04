@@ -15,4 +15,14 @@
         app:defaultValue="EUR"
         app:useSimpleSummaryProvider="true"
         />
+    <androidx.preference.ListPreference
+        android:defaultValue="true"
+        android:entries="@array/limit"
+        android:entryValues="@array/limit"
+        android:icon="@drawable/ic_baseline_access_time_24"
+        android:key="repeatInterval"
+        android:title="@string/limit"
+        app:defaultValue=""
+        app:useSimpleSummaryProvider="true"
+        />
 </androidx.preference.PreferenceScreen>
