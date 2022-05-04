@@ -20,20 +20,28 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.*
 import com.google.android.material.slider.RangeSlider
-import cz.muni.goggles.*
 import cz.muni.goggles.R
 import cz.muni.goggles.adapter.Adapter
+import cz.muni.goggles.api.CatalogApi
+import cz.muni.goggles.api.ProductIdApi
 import cz.muni.goggles.classes.Game
+import cz.muni.goggles.classes.Price
 import cz.muni.goggles.classes.Products
+import cz.muni.goggles.classes.ResultPrices
 import cz.muni.goggles.database.SGameDatabase
 import cz.muni.goggles.worker.PriceCheckWorker
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.io.IOException
+import java.net.URL
 import java.text.NumberFormat
 import java.util.*
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -96,7 +104,13 @@ class MainActivity : AppCompatActivity() {
         val checkboxUpcoming = findViewById<CheckBox>(R.id.checkBoxUpcoming)
         checkboxUpcoming.setOnCheckedChangeListener { _, checked ->
             upcoming = checked
-            refresh()
+            if (following)
+            {
+                getFollowing(following)
+            }else
+            {
+                refresh()
+            }
         }
 
         val checkboxFollowing = findViewById<CheckBox>(R.id.checkBoxFollowing)
@@ -120,7 +134,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updatePrice()
-        refresh()
+        if (following)
+        {
+            getFollowing(following)
+        }else
+        {
+            refresh()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -187,25 +207,50 @@ class MainActivity : AppCompatActivity() {
         {
             val games = SGameDatabase.getDatabase(context).sGameDao().getAll()
             val gamesList:MutableList<Game> = mutableListOf()
+
             for (game in games) {
-                productIdService.getProductsByIds(
-                    game.productId.toString()
-                ).enqueue(object : Callback<Game> {
-                    override fun onResponse(call: Call<Game>, response: Response<Game>) {
-                        print(call.request().toString())
-                        val responseBody = response.body()
-                        Log.i(tag, "Following response body: $responseBody")
-                        if (response.isSuccessful && responseBody != null) {
-                            println(responseBody)
-                            gamesList.add(responseBody)
-                            adapter.setItems(gamesList)
+                var finalPrice: String
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                    .url("https://www.gog.com/products/prices?ids=${game.productId}&countryCode=SK&currency=${game.currency}")
+                    .build()
+
+                client.newCall(request).enqueue(object : okhttp3.Callback {
+                    override fun onResponse(call: okhttp3.Call, responsePrice: okhttp3.Response) {
+                        if (responsePrice.isSuccessful) {
+                            val html = responsePrice.body()!!.string()
+                            var json = html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
+                            json = json.substring(0, json.indexOf("bonusWalletFunds"))
+                            json = json.trim().dropLast(7)
+                            json = json.substring(json.indexOf("\"finalPrice\":\""))
+                            finalPrice = (json.split(":\"")[1].toInt()/100f).toString()
+                            finalPrice = checkCurrencyReturnShort(game.currency) + finalPrice
+                            Log.i(tag, "finalPrice: $finalPrice")
+
+                            productIdService.getProductsByIds(
+                                game.productId.toString()
+                            ).enqueue(object : Callback<Game> {
+                                override fun onResponse(call: Call<Game>, response: Response<Game>) {
+                                    print(call.request().toString())
+
+                                    val responseBody = response.body()
+                                    if (response.isSuccessful && responseBody != null) {
+                                        responseBody.price = Price(finalPrice,"0","0")
+                                        Log.i(tag, "Following response body: $responseBody")
+                                        gamesList.add(responseBody)
+                                        adapter.setItems(gamesList)
+                                    }
+                                }
+
+                                override fun onFailure(call: Call<Game>, t: Throwable) {
+                                    Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            })
                         }
                     }
 
-                    override fun onFailure(call: Call<Game>, t: Throwable) {
-                        println("SPM TU FAIL")
-                        println(t.message)
-                        Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
+                    override fun onFailure(call: okhttp3.Call, e: IOException) {
+                        Toast.makeText(this@MainActivity, "${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
             }
@@ -237,5 +282,16 @@ class MainActivity : AppCompatActivity() {
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
         }
+    }
+
+    private fun checkCurrencyReturnShort(symbol: String) : String {
+        if (symbol == "USD"){
+            return "$"
+        }
+        if (symbol == "EUR"){
+            Log.i("Currency", "Euro")
+            return "€"
+        }
+        return ""
     }
 }

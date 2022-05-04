@@ -4,7 +4,7 @@ data class Game (
     val title: String,
     val coverHorizontal: String?,
     val slug: String,
-    val price: Price?,
+    var price: Price?,
     val id: Int,
     val images: LogoImage?
     )

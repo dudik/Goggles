@@ -1,7 +1,6 @@
 package cz.muni.goggles.adapter
 
 import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,8 +16,6 @@ import cz.muni.goggles.activities.GameDetailActivity
 class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
 
     private val list = mutableListOf<Game>()
-    private val listFollowingGame = mutableListOf<Game>()
-    private val tag = "AdapterLog"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -31,11 +28,7 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
 
         val itemsViewModel = list[position]
 
-
-
-
         val urlFollowing = itemsViewModel.images?.logo2x?.replace(".jpg", ".png")
-
         if (urlFollowing == null)
         {
             Picasso.get().load(itemsViewModel.coverHorizontal?.replace(".png", "_product_tile_300w.png")).into(holder.imageView)
@@ -46,14 +39,14 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
 
         holder.textView.text = itemsViewModel.title
 
-        if (itemsViewModel.price != null)
-            holder.priceView.text = itemsViewModel.price.final
+        if (itemsViewModel.price?.final != null)
+            holder.priceView.text = itemsViewModel.price!!.final
         else {
             holder.priceView.text = "Coming soon"
         }
 
-        if (itemsViewModel.price?.discount != null) {
-            holder.discountView.text = itemsViewModel.price.discount
+        if (itemsViewModel.price?.discount != null && itemsViewModel.price?.discount != "0") {
+            holder.discountView.text = itemsViewModel.price!!.discount
             holder.discountView.visibility = View.VISIBLE
         } else {
             holder.discountView.visibility = View.GONE

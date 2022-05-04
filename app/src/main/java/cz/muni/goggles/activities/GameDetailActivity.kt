@@ -137,7 +137,7 @@ class GameDetailActivity : AppCompatActivity() {
         }
 
         pricePopupView.findViewById<Button>(R.id.okButton).setOnClickListener{ view ->
-            val sGame = SGame(slug, gameTitle, intent.getIntExtra("productId",0),selectedPrice, checkCurrency(currency))
+            val sGame = SGame(slug, gameTitle, intent.getIntExtra("productId",0),selectedPrice, checkCurrencyReturnLong(currency))
             sGameViewModel.insert(sGame)
             binding.fab.setImageResource(R.drawable.ic_baseline_notifications_24)
             binding.fab.setColorFilter(Color.rgb(255,51,51))
@@ -146,7 +146,7 @@ class GameDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkCurrency(symbol: Char) : String {
+    private fun checkCurrencyReturnLong(symbol: Char) : String {
         if (symbol == '$'){
             Log.i("Currency", "Dollar")
             return "USD"

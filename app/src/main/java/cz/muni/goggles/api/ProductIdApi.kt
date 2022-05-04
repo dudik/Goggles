@@ -1,4 +1,4 @@
-package cz.muni.goggles
+package cz.muni.goggles.api
 
 import cz.muni.goggles.classes.Game
 import retrofit2.Call
