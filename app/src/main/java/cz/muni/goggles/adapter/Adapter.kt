@@ -16,6 +16,7 @@ import cz.muni.goggles.activities.GameDetailActivity
 class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
 
     private val list = mutableListOf<Game>()
+    private val listFollowingGame = mutableListOf<Game>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -27,8 +28,10 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         val ItemsViewModel = list[position]
-
-        Picasso.get().load(ItemsViewModel.coverHorizontal.replace(".png", "_product_tile_300w.png")).into(holder.imageView)
+        println("https:".plus(ItemsViewModel.images?.background?.replace(".jpg", "_product_tile_300w.png")))
+        Picasso.get().load("https:".plus(ItemsViewModel.images?.background?.replace(".jpg", "_product_tile_300w.png"))).into(holder.imageView)
+        Picasso.get().load(ItemsViewModel.coverHorizontal?.replace(".png", "_product_tile_300w.png")).into(holder.imageView)
+        println(ItemsViewModel.images?.background)
         println(ItemsViewModel.coverHorizontal)
 
         holder.textView.text = ItemsViewModel.title
@@ -54,7 +57,7 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
             i.putExtra("image", ItemsViewModel.coverHorizontal)
             i.putExtra("slug", ItemsViewModel.slug)
             i.putExtra("productId", ItemsViewModel.id)
-            i.putExtra("price", ItemsViewModel.price.final)
+            i.putExtra("price", ItemsViewModel.price?.final)
             context.startActivity(i)
         }
     }
@@ -68,6 +71,8 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
         list.addAll(games)
         notifyDataSetChanged()
     }
+
+
 
     class ViewHolder(ItemView: View) : RecyclerView.ViewHolder(ItemView) {
         val imageView: ImageView = itemView.findViewById(R.id.imageView)
