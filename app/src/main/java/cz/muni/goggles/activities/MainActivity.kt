@@ -70,7 +70,6 @@ class MainActivity : AppCompatActivity() {
 
     private val channelId = "channelID"
     private val channelName = "Subscription"
-    private var repeatInterval: Long = 4
 
     val tag = "MainActivityLog"
 
@@ -117,6 +116,8 @@ class MainActivity : AppCompatActivity() {
         })
 
 
+
+
         checkboxUpcoming.setOnCheckedChangeListener { _, checked ->
             upcoming = checked
             if (following)
@@ -135,7 +136,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val priceCheckWorkRequest: WorkRequest =
-            PeriodicWorkRequestBuilder<PriceCheckWorker>(repeatInterval,TimeUnit.HOURS)
+            PeriodicWorkRequestBuilder<PriceCheckWorker>(
+                sharedPreferences.getString("repeatInterval","4")!!.toLong(),TimeUnit.HOURS)
                 .addTag("PRICE_CHECK")
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .build()
