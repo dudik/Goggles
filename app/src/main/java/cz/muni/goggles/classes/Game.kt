@@ -4,8 +4,9 @@ data class Game (
     val title: String,
     val coverHorizontal: String,
     val slug: String,
-    val price: Price,
-    val id: Int
+    val price: Price?,
+    val id: Int,
+    val images: LogoImage?
     )
 
 data class Price (
