@@ -21,9 +21,4 @@ class SGameRepository(private val sGameDao: SGameDao) {
     fun getAll(): List<SGame> {
         return sGameDao.getAll()
     }
-
-    fun getAllIds(): List<Int> {
-        return sGameDao.getAllIds()
-    }
-
 }

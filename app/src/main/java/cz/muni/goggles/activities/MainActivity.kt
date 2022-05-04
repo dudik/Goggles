@@ -14,6 +14,7 @@ import android.widget.CheckBox
 import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
@@ -21,13 +22,15 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.work.*
 import com.google.android.material.slider.RangeSlider
 import cz.muni.goggles.R
+import cz.muni.goggles.SGameApplication
 import cz.muni.goggles.adapter.Adapter
 import cz.muni.goggles.api.CatalogApi
 import cz.muni.goggles.api.ProductIdApi
 import cz.muni.goggles.classes.Game
 import cz.muni.goggles.classes.Price
 import cz.muni.goggles.classes.Products
-import cz.muni.goggles.database.SGameDatabase
+import cz.muni.goggles.database.SGameViewModel
+import cz.muni.goggles.database.SGameViewModelFactory
 import cz.muni.goggles.worker.PriceCheckWorker
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -71,6 +74,9 @@ class MainActivity : AppCompatActivity() {
 
     val tag = "MainActivityLog"
 
+    private val sGameViewModel: SGameViewModel by viewModels {
+        SGameViewModelFactory((application as SGameApplication).repository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -214,7 +220,7 @@ class MainActivity : AppCompatActivity() {
 
         if (following)
         {
-            val games = SGameDatabase.getDatabase(context).sGameDao().getAll()
+            val games = sGameViewModel.getAll()
             val gamesList:MutableList<Game> = mutableListOf()
 
             for (game in games) {

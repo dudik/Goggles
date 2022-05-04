@@ -74,8 +74,12 @@ class GameDetailActivity : AppCompatActivity() {
         if (!intent.getStringExtra("slug").isNullOrEmpty()){
             slug = intent.getStringExtra("slug")!!
         }
+
+        Log.i("DetailLog","Slug detail: $slug")
+
         var gameFromDatabase = sGameViewModel.getGame(slug)
 
+        Log.i("DetailLog","gameFromDatabase: $gameFromDatabase")
 
         val gameTitle = intent.getStringExtra("title")
         this.title = gameTitle
@@ -89,7 +93,7 @@ class GameDetailActivity : AppCompatActivity() {
             binding.fab.setColorFilter(Color.rgb(255,51,51))
         }
 
-        binding.fab.setOnClickListener { _ ->
+        binding.fab.setOnClickListener {
             gameFromDatabase = sGameViewModel.getGame(slug)
             if (gameFromDatabase == null){
                 selectPriceForAlert(slug, gameTitle!!)
@@ -137,7 +141,7 @@ class GameDetailActivity : AppCompatActivity() {
         }
 
         pricePopupView.findViewById<Button>(R.id.okButton).setOnClickListener{ view ->
-            val sGame = SGame(slug, gameTitle, intent.getIntExtra("productId",0),selectedPrice, checkCurrencyReturnLong(currency))
+            val sGame = SGame(slug.replace("-","_"), gameTitle, intent.getIntExtra("productId",0),selectedPrice, checkCurrencyReturnLong(currency))
             sGameViewModel.insert(sGame)
             binding.fab.setImageResource(R.drawable.ic_baseline_notifications_24)
             binding.fab.setColorFilter(Color.rgb(255,51,51))
