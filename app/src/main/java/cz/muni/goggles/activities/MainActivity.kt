@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.CheckBox
@@ -24,10 +25,7 @@ import cz.muni.goggles.R
 import cz.muni.goggles.adapter.Adapter
 import cz.muni.goggles.classes.Game
 import cz.muni.goggles.classes.Products
-import cz.muni.goggles.database.SGame
-import cz.muni.goggles.database.SGameDao
 import cz.muni.goggles.database.SGameDatabase
-import cz.muni.goggles.database.SGameRepository
 import cz.muni.goggles.worker.PriceCheckWorker
 import retrofit2.Call
 import retrofit2.Callback
@@ -49,8 +47,8 @@ class MainActivity : AppCompatActivity() {
         .addConverterFactory(MoshiConverterFactory.create())
         .build()
 
-    private val service: Api = retrofit.create(Api::class.java)
-    private val gogService: GogApi = retrofitGog.create(GogApi::class.java)
+    private val service: CatalogApi = retrofit.create(CatalogApi::class.java)
+    private val productIdService: ProductIdApi = retrofitGog.create(ProductIdApi::class.java)
     private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     private var query: String = ""
@@ -63,6 +61,9 @@ class MainActivity : AppCompatActivity() {
 
     private val channelId = "channelID"
     private val channelName = "Subscription"
+    private var repeatInterval: Long = 4
+
+    val tag = "MainActivityLog"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,7 +106,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val priceCheckWorkRequest: WorkRequest =
-            PeriodicWorkRequestBuilder<PriceCheckWorker>(4,TimeUnit.HOURS)
+            PeriodicWorkRequestBuilder<PriceCheckWorker>(repeatInterval,TimeUnit.HOURS)
                 .addTag("PRICE_CHECK")
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .build()
@@ -164,6 +165,7 @@ class MainActivity : AppCompatActivity() {
                 if (upcoming) "in:upcoming" else null
             ).enqueue(object : Callback<Products> {
                 override fun onResponse(call: Call<Products>, response: Response<Products>) {
+                    Log.i(tag, "Call refresh body: ${call.request()}")
                     val responseBody = response.body()
                     if (response.isSuccessful && responseBody != null) {
                         println(responseBody.products)
@@ -186,20 +188,18 @@ class MainActivity : AppCompatActivity() {
             val games = SGameDatabase.getDatabase(context).sGameDao().getAll()
             val gamesList:MutableList<Game> = mutableListOf()
             for (game in games) {
-                gogService.getProductsByIds(
+                productIdService.getProductsByIds(
                     game.productId.toString()
                 ).enqueue(object : Callback<Game> {
                     override fun onResponse(call: Call<Game>, response: Response<Game>) {
                         print(call.request().toString())
                         val responseBody = response.body()
-                        println("SPM TU")
-                        println(responseBody)
+                        Log.i(tag, "Following response body: $responseBody")
                         if (response.isSuccessful && responseBody != null) {
                             println(responseBody)
                             gamesList.add(responseBody)
                             adapter.setItems(gamesList)
                         }
-
                     }
 
                     override fun onFailure(call: Call<Game>, t: Throwable) {
@@ -213,9 +213,6 @@ class MainActivity : AppCompatActivity() {
         else{
             refresh()
         }
-
-
-
     }
 
     private fun updatePrice() {

@@ -1,6 +1,7 @@
 package cz.muni.goggles.adapter
 
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +18,7 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
 
     private val list = mutableListOf<Game>()
     private val listFollowingGame = mutableListOf<Game>()
+    private val tag = "AdapterLog"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -27,23 +29,31 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-        val ItemsViewModel = list[position]
-        println("https:".plus(ItemsViewModel.images?.background?.replace(".jpg", "_product_tile_300w.png")))
-        Picasso.get().load("https:".plus(ItemsViewModel.images?.background?.replace(".jpg", "_product_tile_300w.png"))).into(holder.imageView)
-        Picasso.get().load(ItemsViewModel.coverHorizontal?.replace(".png", "_product_tile_300w.png")).into(holder.imageView)
-        println(ItemsViewModel.images?.background)
-        println(ItemsViewModel.coverHorizontal)
+        val itemsViewModel = list[position]
 
-        holder.textView.text = ItemsViewModel.title
 
-        if (ItemsViewModel.price != null)
-            holder.priceView.text = ItemsViewModel.price.final
+
+
+        val urlFollowing = itemsViewModel.images?.background?.replace(".jpg", "_product_tile_300w.png")
+
+        if (urlFollowing == null)
+        {
+            Picasso.get().load(itemsViewModel.coverHorizontal?.replace(".png", "_product_tile_300w.png")).into(holder.imageView)
+        }else
+        {
+            Picasso.get().load("https:$urlFollowing").into(holder.imageView)
+        }
+
+        holder.textView.text = itemsViewModel.title
+
+        if (itemsViewModel.price != null)
+            holder.priceView.text = itemsViewModel.price.final
         else {
             holder.priceView.text = "Coming soon"
         }
 
-        if (ItemsViewModel.price?.discount != null) {
-            holder.discountView.text = ItemsViewModel.price.discount
+        if (itemsViewModel.price?.discount != null) {
+            holder.discountView.text = itemsViewModel.price.discount
             holder.discountView.visibility = View.VISIBLE
         } else {
             holder.discountView.visibility = View.GONE
@@ -53,11 +63,11 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
 
         holder.itemView.setOnClickListener {
             val i = Intent(context, GameDetailActivity::class.java)
-            i.putExtra("title", ItemsViewModel.title)
-            i.putExtra("image", ItemsViewModel.coverHorizontal)
-            i.putExtra("slug", ItemsViewModel.slug)
-            i.putExtra("productId", ItemsViewModel.id)
-            i.putExtra("price", ItemsViewModel.price?.final)
+            i.putExtra("title", itemsViewModel.title)
+            i.putExtra("image", itemsViewModel.coverHorizontal)
+            i.putExtra("slug", itemsViewModel.slug)
+            i.putExtra("productId", itemsViewModel.id)
+            i.putExtra("price", itemsViewModel.price?.final)
             context.startActivity(i)
         }
     }
