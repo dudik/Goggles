@@ -20,4 +20,7 @@ interface SGameDao {
     @Query("SELECT * from sGames_database")
     fun getAll(): List<SGame>
 
+    @Query("SELECT productId from sGames_database")
+    fun getAllIds(): List<Int>
+
 }
