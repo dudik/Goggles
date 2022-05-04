@@ -1,5 +1,5 @@
 package cz.muni.goggles.classes
 
 data class LogoImage (
-    val background : String
+    val logo2x : String
 )

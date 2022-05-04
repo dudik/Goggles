@@ -34,7 +34,7 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
 
 
 
-        val urlFollowing = itemsViewModel.images?.background?.replace(".jpg", "_product_tile_300w.png")
+        val urlFollowing = itemsViewModel.images?.logo2x?.replace(".jpg", ".png")
 
         if (urlFollowing == null)
         {
