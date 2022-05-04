@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         val checkboxFollowing = findViewById<CheckBox>(R.id.checkBoxFollowing)
         checkboxFollowing.setOnCheckedChangeListener { _, checked ->
             following = checked
-            getFollowing()
+            getFollowing(following)
         }
 
         val priceCheckWorkRequest: WorkRequest =
@@ -179,36 +179,42 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun getFollowing() {
-        val games = SGameDatabase.getDatabase(context).sGameDao().getAll()
-        val gamesList:MutableList<Game> = mutableListOf<Game>()
-        for (game in games) {
-            gogService.getProductsByIds(
-                game.productId.toString()
-            ).enqueue(object : Callback<Game> {
-                override fun onResponse(call: Call<Game>, response: Response<Game>) {
-                    print(call.request().toString())
-                    val responseBody = response.body()
-                    println("SPM TU")
-                    println(responseBody)
-                    if (response.isSuccessful && responseBody != null) {
+    private fun getFollowing(following : Boolean) {
+
+        if (following)
+        {
+            val games = SGameDatabase.getDatabase(context).sGameDao().getAll()
+            val gamesList:MutableList<Game> = mutableListOf()
+            for (game in games) {
+                gogService.getProductsByIds(
+                    game.productId.toString()
+                ).enqueue(object : Callback<Game> {
+                    override fun onResponse(call: Call<Game>, response: Response<Game>) {
+                        print(call.request().toString())
+                        val responseBody = response.body()
+                        println("SPM TU")
                         println(responseBody)
-                        gamesList.add(responseBody)
-                        adapter.setItems(gamesList)
+                        if (response.isSuccessful && responseBody != null) {
+                            println(responseBody)
+                            gamesList.add(responseBody)
+                            adapter.setItems(gamesList)
+                        }
+
                     }
 
-                }
-
-                override fun onFailure(call: Call<Game>, t: Throwable) {
-                    println("SPM TU FAIL")
-                    println(t.message)
-                    Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
-                }
-
-
-            })
-
+                    override fun onFailure(call: Call<Game>, t: Throwable) {
+                        println("SPM TU FAIL")
+                        println(t.message)
+                        Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
         }
+        else{
+            refresh()
+        }
+
+
 
     }
 
