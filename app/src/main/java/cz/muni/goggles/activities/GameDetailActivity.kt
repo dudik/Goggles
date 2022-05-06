@@ -20,6 +20,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
+import android.content.Intent
+import android.net.Uri
 
 
 class GameDetailActivity : AppCompatActivity() {
@@ -87,6 +89,12 @@ class GameDetailActivity : AppCompatActivity() {
         setSupportActionBar(findViewById(R.id.toolbar))
         binding.toolbarLayout.title = title
         binding.priceText.text = intent.getStringExtra("price")
+
+        binding.fab2.setOnClickListener {
+            var url = "https://www.gog.com/game/" + slug.replace("-", "_")
+            val blankIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            startActivity(blankIntent)
+        }
 
         if (gameFromDatabase != null){
             binding.fab.setImageResource(R.drawable.ic_baseline_notifications_24)
