@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.CheckBox
 import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
@@ -32,6 +31,7 @@ import cz.muni.goggles.classes.Products
 import cz.muni.goggles.database.SGameViewModel
 import cz.muni.goggles.database.SGameViewModelFactory
 import cz.muni.goggles.worker.PriceCheckWorker
+import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import retrofit2.Call
@@ -47,74 +47,71 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity() {
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl("https://catalog.gog.com/v1/")
-        .addConverterFactory(MoshiConverterFactory.create())
-        .build()
+        .addConverterFactory(MoshiConverterFactory.create()).build()
 
-    private val retrofitGog: Retrofit = Retrofit.Builder()
-        .baseUrl("https://api.gog.com/")
-        .addConverterFactory(MoshiConverterFactory.create())
-        .build()
+    private val retrofitGog: Retrofit = Retrofit.Builder().baseUrl("https://api.gog.com/").addConverterFactory(MoshiConverterFactory.create()).build()
 
     private val service: CatalogApi = retrofit.create(CatalogApi::class.java)
     private val productIdService: ProductIdApi = retrofitGog.create(ProductIdApi::class.java)
     private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val sGameViewModel: SGameViewModel by viewModels {
+        SGameViewModelFactory((application as SGameApplication).repository)
+    }
 
-    private var query: String = ""
     private lateinit var priceTextView: TextView
     private lateinit var priceRangeSlider: RangeSlider
     private lateinit var adapter: Adapter
-    private lateinit var context: Context
+
+    private var query: String = ""
     private var upcoming = false
     private var following = false
     private var isStartedFromNotification = false
     private var pageNumber = 1
 
-    private val channelId = "channelID"
-    private val channelName = "Subscription"
+    private val channelId = "goggles"
+    private val channelName = "Price"
 
     val tag = "MainActivityLog"
-
-    private val sGameViewModel: SGameViewModel by viewModels {
-        SGameViewModelFactory((application as SGameApplication).repository)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         createNotificationChannel()
-        val checkboxUpcoming = findViewById<CheckBox>(R.id.checkBoxUpcoming)
-        val checkboxFollowing = findViewById<CheckBox>(R.id.checkBoxFollowing)
 
-        val extras = intent.extras
-        if (extras != null) {
-            isStartedFromNotification = extras.getBoolean("fromNotification")
-        }
-        if (isStartedFromNotification) {
-            checkboxFollowing.isChecked = true
-            following = true
-        }
+        setActivityIfStartedFromNotification()
+        setRecycler()
+        setPriceSlider()
+        setCheckBoxes()
+        setWorkerForPriceCheck()
+    }
 
-        context = applicationContext
-        val recyclerView = findViewById<RecyclerView>(R.id.recycler)
-        recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 2)
+    private fun setWorkerForPriceCheck() {
+        val priceCheckWorkRequest: WorkRequest = PeriodicWorkRequestBuilder<PriceCheckWorker>(
+            sharedPreferences.getString("repeatInterval", "4")!!.toLong(), TimeUnit.HOURS
+        ).addTag("PRICE_CHECK").setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build()
 
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
+        WorkManager.getInstance(this).enqueue(priceCheckWorkRequest)
+    }
 
-                if (!recyclerView.canScrollVertically(1) && dy != 0 && (!following && !upcoming)) {
-                    pageNumber++
-                    refresh(pageNumber)
-                }
+    private fun setCheckBoxes() {
+        checkBoxUpcoming.setOnCheckedChangeListener { _, checked ->
+            pageNumber = 1
+            upcoming = checked
+            if (following) {
+                getFollowing(following)
+            } else {
+                refresh()
             }
-        })
+        }
 
-        adapter = Adapter()
-        recyclerView.adapter = adapter
+        checkBoxFollowing.setOnCheckedChangeListener { _, checked ->
+            pageNumber = 1
+            following = checked
+            getFollowing(following)
+        }
+    }
 
-        priceRangeSlider = findViewById(R.id.priceRangeSlider)
-        priceTextView = findViewById(R.id.priceTextView)
-
+    private fun setPriceSlider() {
         priceRangeSlider.addOnChangeListener { _, _, _ ->
             pageNumber = 1
             updatePrice()
@@ -127,36 +124,35 @@ class MainActivity : AppCompatActivity() {
                 refresh()
             }
         })
+    }
 
-        checkboxUpcoming.setOnCheckedChangeListener { _, checked ->
-            pageNumber = 1
-            upcoming = checked
-            if (following) {
-                getFollowing(following)
-            } else {
-                refresh()
+    private fun setRecycler() {
+        recycler.layoutManager = GridLayoutManager(this@MainActivity, 2)
+        recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (!recyclerView.canScrollVertically(1) && dy != 0 && (!following && !upcoming)) {
+                    pageNumber++
+                    refresh(pageNumber)
+                }
             }
+        })
+
+        adapter = Adapter()
+        recycler.adapter = adapter
+    }
+
+    private fun setActivityIfStartedFromNotification() {
+        val extras = intent.extras
+
+        if (extras != null) {
+            isStartedFromNotification = extras.getBoolean("fromNotification")
         }
-
-        checkboxFollowing.setOnCheckedChangeListener { _, checked ->
-            pageNumber = 1
-            following = checked
-            getFollowing(following)
+        if (isStartedFromNotification) {
+            checkBoxFollowing.isChecked = true
+            following = true
         }
-
-        val priceCheckWorkRequest: WorkRequest =
-            PeriodicWorkRequestBuilder<PriceCheckWorker>(
-                sharedPreferences.getString("repeatInterval", "4")!!.toLong(), TimeUnit.HOURS
-            )
-                .addTag("PRICE_CHECK")
-                .setConstraints(
-                    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-                )
-                .build()
-
-        WorkManager
-            .getInstance(this)
-            .enqueue(priceCheckWorkRequest)
     }
 
     override fun onResume() {
