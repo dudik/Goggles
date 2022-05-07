@@ -74,7 +74,7 @@ class GameDetailActivity : AppCompatActivity() {
 
         var slug = ""
         if (!intent.getStringExtra("slug").isNullOrEmpty()){
-            slug = intent.getStringExtra("slug")!!
+            slug = intent.getStringExtra("slug")!!.replace("-", "_")
         }
 
         Log.i("DetailLog","Slug detail: $slug")
@@ -91,7 +91,7 @@ class GameDetailActivity : AppCompatActivity() {
         binding.priceText.text = intent.getStringExtra("price")
 
         binding.fab2.setOnClickListener {
-            var url = "https://www.gog.com/game/" + slug.replace("-", "_")
+            val url = "https://www.gog.com/game/" + slug.replace("-", "_")
             val blankIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(blankIntent)
         }

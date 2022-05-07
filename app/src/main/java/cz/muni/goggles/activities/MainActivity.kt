@@ -39,7 +39,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import java.io.Console
 import java.io.IOException
 import java.text.NumberFormat
 import java.util.*
@@ -103,7 +102,7 @@ class MainActivity : AppCompatActivity() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
-                if (!recyclerView.canScrollVertically(1) && dy != 0) {
+                if (!recyclerView.canScrollVertically(1) && dy != 0 && (!following || !upcoming)) {
                     pageNumber++
                     refresh(pageNumber)
                 }
