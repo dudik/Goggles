@@ -18,11 +18,6 @@
             android:label="@string/title_activity_game_detail"
             android:theme="@style/Theme.Goggles.NoActionBar" />
         <activity
-            android:name=".ScrollingActivity"
-            android:exported="false"
-            android:label="@string/title_activity_scrolling"
-            android:theme="@style/Theme.Goggles.NoActionBar" />
-        <activity
             android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
