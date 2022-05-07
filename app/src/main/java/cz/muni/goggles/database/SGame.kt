@@ -17,5 +17,5 @@ data class SGame(
     val price: Int,
     @ColumnInfo(name = "currency")
     val currency: String
-    )
+)
 

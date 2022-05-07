@@ -8,9 +8,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
-import cz.muni.goggles.classes.Game
 import cz.muni.goggles.R
 import cz.muni.goggles.activities.GameDetailActivity
+import cz.muni.goggles.classes.Game
 
 
 class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
@@ -29,11 +29,11 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
         val itemsViewModel = list[position]
 
         val urlFollowing = itemsViewModel.images?.logo2x?.replace(".jpg", ".png")
-        if (urlFollowing == null)
-        {
-            Picasso.get().load(itemsViewModel.coverHorizontal?.replace(".png", "_product_tile_300w.png")).into(holder.imageView)
-        }else
-        {
+        if (urlFollowing == null) {
+            Picasso.get()
+                .load(itemsViewModel.coverHorizontal?.replace(".png", "_product_tile_300w.png"))
+                .into(holder.imageView)
+        } else {
             Picasso.get().load("https:$urlFollowing").into(holder.imageView)
         }
 

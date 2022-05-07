@@ -15,7 +15,7 @@ class SGameRepository(private val sGameDao: SGameDao) {
     }
 
     fun getGame(name: String): SGame? {
-       return sGameDao.getGame(name)
+        return sGameDao.getGame(name)
     }
 
     fun getAll(): List<SGame> {

@@ -24,7 +24,7 @@ abstract class SGameDatabase : RoomDatabase() {
                     SGameDatabase::class.java,
                     "sGames_database"
                 ).allowMainThreadQueries()
-                 .build()
+                    .build()
                 INSTANCE = instance
                 instance
             }

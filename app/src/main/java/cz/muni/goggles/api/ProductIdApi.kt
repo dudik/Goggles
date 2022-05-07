@@ -8,6 +8,6 @@ import retrofit2.http.Path
 interface ProductIdApi {
     @GET("products/{ids}")
     fun getProductsByIds(
-        @Path("ids")ids: String
+        @Path("ids") ids: String
     ): Call<Game>
 }

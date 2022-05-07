@@ -1,7 +1,9 @@
 package cz.muni.goggles.activities
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -20,8 +22,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
-import android.content.Intent
-import android.net.Uri
 
 
 class GameDetailActivity : AppCompatActivity() {
@@ -55,7 +55,8 @@ class GameDetailActivity : AppCompatActivity() {
                 if (response.body() != null) {
                     val html = response.body()!!.string()
 
-                    var json = html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
+                    var json =
+                        html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
                     println(json)
                     json = json.substring(0, json.indexOf("cardProductId:"))
                     json = json.trim().dropLast(1)
@@ -64,7 +65,8 @@ class GameDetailActivity : AppCompatActivity() {
                     val description = gameDetail.getString("description")
                     val image = gameDetail.get("galaxyBackgroundImage").toString()
                     runOnUiThread {
-                        findViewById<TextView>(R.id.descriptionView).text = HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_COMPACT)
+                        findViewById<TextView>(R.id.descriptionView).text =
+                            HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_COMPACT)
                         val lay = findViewById<ImageView>(R.id.image_cover)
                         Picasso.get().load(image).into(lay)
                     }
@@ -73,15 +75,15 @@ class GameDetailActivity : AppCompatActivity() {
         })
 
         var slug = ""
-        if (!intent.getStringExtra("slug").isNullOrEmpty()){
+        if (!intent.getStringExtra("slug").isNullOrEmpty()) {
             slug = intent.getStringExtra("slug")!!.replace("-", "_")
         }
 
-        Log.i("DetailLog","Slug detail: $slug")
+        Log.i("DetailLog", "Slug detail: $slug")
 
         var gameFromDatabase = sGameViewModel.getGame(slug)
 
-        Log.i("DetailLog","gameFromDatabase: $gameFromDatabase")
+        Log.i("DetailLog", "gameFromDatabase: $gameFromDatabase")
 
         val gameTitle = intent.getStringExtra("title")
         this.title = gameTitle
@@ -96,17 +98,16 @@ class GameDetailActivity : AppCompatActivity() {
             startActivity(blankIntent)
         }
 
-        if (gameFromDatabase != null){
+        if (gameFromDatabase != null) {
             binding.fab.setImageResource(R.drawable.ic_baseline_notifications_24)
-            binding.fab.setColorFilter(Color.rgb(255,51,51))
+            binding.fab.setColorFilter(Color.rgb(255, 51, 51))
         }
 
         binding.fab.setOnClickListener {
             gameFromDatabase = sGameViewModel.getGame(slug)
-            if (gameFromDatabase == null){
+            if (gameFromDatabase == null) {
                 selectPriceForAlert(slug, gameTitle!!)
-            }else
-            {
+            } else {
                 sGameViewModel.delete(gameFromDatabase!!)
                 binding.fab.setImageResource(R.drawable.ic_baseline_notifications_none_24)
                 binding.fab.setColorFilter(Color.WHITE)
@@ -119,10 +120,10 @@ class GameDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun selectPriceForAlert(slug : String, gameTitle: String) {
+    private fun selectPriceForAlert(slug: String, gameTitle: String) {
         var selectedPrice = 0
         val dialogBuilder = AlertDialog.Builder(this)
-        val pricePopupView = layoutInflater.inflate(R.layout.popup,null)
+        val pricePopupView = layoutInflater.inflate(R.layout.popup, null)
         dialogBuilder.setView(pricePopupView)
         val dialog = dialogBuilder.create()
         dialog.show()
@@ -131,7 +132,16 @@ class GameDetailActivity : AppCompatActivity() {
 
         val currency = intent.getStringExtra("price")!!.first()
 
-        val listOfItems = arrayOf("5 $currency", "10 $currency", "15 $currency", "20 $currency", "25 $currency", "30 $currency", "35 $currency", "40 $currency")
+        val listOfItems = arrayOf(
+            "5 $currency",
+            "10 $currency",
+            "15 $currency",
+            "20 $currency",
+            "25 $currency",
+            "30 $currency",
+            "35 $currency",
+            "40 $currency"
+        )
         val arrayAdapter = ArrayAdapter(this, R.layout.custom_spinner, listOfItems)
         arrayAdapter.setDropDownViewResource(R.layout.custom_spinner_dropdown)
         spinner!!.adapter = arrayAdapter
@@ -139,8 +149,14 @@ class GameDetailActivity : AppCompatActivity() {
 
         spinner.adapter
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                selectedPrice = adapterView?.getItemAtPosition(position).toString().dropLast(2).toInt()
+            override fun onItemSelected(
+                adapterView: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                selectedPrice =
+                    adapterView?.getItemAtPosition(position).toString().dropLast(2).toInt()
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {
@@ -148,22 +164,28 @@ class GameDetailActivity : AppCompatActivity() {
             }
         }
 
-        pricePopupView.findViewById<Button>(R.id.okButton).setOnClickListener{ view ->
-            val sGame = SGame(slug.replace("-","_"), gameTitle, intent.getIntExtra("productId",0),selectedPrice, checkCurrencyReturnLong(currency))
+        pricePopupView.findViewById<Button>(R.id.okButton).setOnClickListener { view ->
+            val sGame = SGame(
+                slug.replace("-", "_"),
+                gameTitle,
+                intent.getIntExtra("productId", 0),
+                selectedPrice,
+                checkCurrencyReturnLong(currency)
+            )
             sGameViewModel.insert(sGame)
             binding.fab.setImageResource(R.drawable.ic_baseline_notifications_24)
-            binding.fab.setColorFilter(Color.rgb(255,51,51))
+            binding.fab.setColorFilter(Color.rgb(255, 51, 51))
             Toast.makeText(this, "Game $gameTitle subscribed", Toast.LENGTH_LONG).show()
             dialog.dismiss()
         }
     }
 
-    private fun checkCurrencyReturnLong(symbol: Char) : String {
-        if (symbol == '$'){
+    private fun checkCurrencyReturnLong(symbol: Char): String {
+        if (symbol == '$') {
             Log.i("Currency", "Dollar")
             return "USD"
         }
-        if (symbol == '€'){
+        if (symbol == '€') {
             Log.i("Currency", "Euro")
             return "EUR"
         }

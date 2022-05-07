@@ -17,7 +17,8 @@ import okhttp3.Request
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
 
-class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Worker(appContext, workerParams) {
+class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters) :
+    Worker(appContext, workerParams) {
 
     private val channelId = "channelID"
     private val notificationId = 0
@@ -34,9 +35,11 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Wor
 
         val gamesForCheck = SGameDatabase.getDatabase(context).sGameDao().getAll()
         val countDownLatch = CountDownLatch(gamesForCheck.size)
-        for (game in gamesForCheck)
-        {
-            Log.i(tag, "https://www.gog.com/products/prices?ids=${game.productId}&countryCode=SK&currency=${game.currency}")
+        for (game in gamesForCheck) {
+            Log.i(
+                tag,
+                "https://www.gog.com/products/prices?ids=${game.productId}&countryCode=SK&currency=${game.currency}"
+            )
             Log.i(tag, "ProductId from DB: ${game.productId}")
 
             val request = Request.Builder()
@@ -53,7 +56,8 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Wor
                 override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                     if (response.body() != null) {
                         val html = response.body()!!.string()
-                        var json = html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
+                        var json =
+                            html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
 
                         json = json.substring(0, json.indexOf("bonusWalletFunds"))
 
@@ -62,8 +66,7 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Wor
                         val finalPrice = json.split(":\"")[1].toInt()
                         Log.i(tag, "finalPrice: $finalPrice")
 
-                        if (finalPrice < game.price*100)
-                        {
+                        if (finalPrice < game.price * 100) {
                             finalGames.add(game.name)
                             Log.i(tag, "Game Added")
                         }
@@ -82,8 +85,10 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Wor
             // Add the intent, which inflates the back stack
             addNextIntentWithParentStack(resultIntent)
             // Get the PendingIntent containing the entire back stack
-            getPendingIntent(0,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            getPendingIntent(
+                0,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
 
@@ -94,7 +99,7 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters): Wor
             val notification = NotificationCompat.Builder(context, channelId)
                 .setContentIntent(resultPendingIntent)
                 .setContentTitle("Great price")
-                .setContentText("Buy ${finalGames.joinToString(", ") } now")
+                .setContentText("Buy ${finalGames.joinToString(", ")} now")
                 .setSmallIcon(R.drawable.ic_baseline_notifications_24)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build()

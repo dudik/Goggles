@@ -18,13 +18,15 @@ class SettingsActivity : AppCompatActivity() {
         // showing the back button in action bar
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        supportFragmentManager.beginTransaction().replace(R.id.fragmentContainerView, SettingsFragment()).commit()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainerView, SettingsFragment()).commit()
 
     }
-     // this event will enable the back
+
+    // this event will enable the back
     // function to the button on press
-     override fun onSupportNavigateUp(): Boolean {
-         finish()
-         return true
-     }
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
 }

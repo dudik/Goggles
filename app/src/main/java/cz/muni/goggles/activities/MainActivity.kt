@@ -86,10 +86,10 @@ class MainActivity : AppCompatActivity() {
         val checkboxFollowing = findViewById<CheckBox>(R.id.checkBoxFollowing)
 
         val extras = intent.extras
-        if (extras != null){
+        if (extras != null) {
             isStartedFromNotification = extras.getBoolean("fromNotification")
         }
-        if (isStartedFromNotification){
+        if (isStartedFromNotification) {
             checkboxFollowing.isChecked = true
             following = true
         }
@@ -121,28 +121,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         priceRangeSlider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: RangeSlider) { }
+            override fun onStartTrackingTouch(slider: RangeSlider) {}
 
             override fun onStopTrackingTouch(slider: RangeSlider) {
                 refresh()
             }
         })
 
-
-
-
         checkboxUpcoming.setOnCheckedChangeListener { _, checked ->
             pageNumber = 1
             upcoming = checked
-            if (following)
-            {
+            if (following) {
                 getFollowing(following)
-            }else
-            {
+            } else {
                 refresh()
             }
         }
-
 
         checkboxFollowing.setOnCheckedChangeListener { _, checked ->
             pageNumber = 1
@@ -152,25 +146,25 @@ class MainActivity : AppCompatActivity() {
 
         val priceCheckWorkRequest: WorkRequest =
             PeriodicWorkRequestBuilder<PriceCheckWorker>(
-                sharedPreferences.getString("repeatInterval","4")!!.toLong(),TimeUnit.HOURS)
+                sharedPreferences.getString("repeatInterval", "4")!!.toLong(), TimeUnit.HOURS
+            )
                 .addTag("PRICE_CHECK")
-                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .setConstraints(
+                    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+                )
                 .build()
 
         WorkManager
             .getInstance(this)
             .enqueue(priceCheckWorkRequest)
-
     }
 
     override fun onResume() {
         super.onResume()
         updatePrice()
-        if (following)
-        {
+        if (following) {
             getFollowing(following)
-        }else
-        {
+        } else {
             refresh()
         }
     }
@@ -186,7 +180,7 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 refresh()
                 return false
@@ -196,7 +190,6 @@ class MainActivity : AppCompatActivity() {
                 query = p0 ?: ""
                 return false
             }
-
         })
 
         return super.onCreateOptionsMenu(menu)
@@ -210,36 +203,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refresh(pageNumber: Int = 1) {
-            service.getSearchByName(
-                sharedPreferences.getString("currency", "EUR") ?: "EUR",
-                if (query.isBlank()) null else "like:$query",
-                "between%3A${priceRangeSlider.values[0]}%2C${priceRangeSlider.values[1]}",
-                if (upcoming) "in:upcoming" else null,
-                page = pageNumber
-            ).enqueue(object : Callback<Products> {
-                override fun onResponse(call: Call<Products>, response: Response<Products>) {
-                    Log.i(tag, "Call refresh body: ${call.request()}")
-                    val responseBody = response.body()
-                    if (response.isSuccessful && responseBody != null) {
-                        println(responseBody.products)
-                        adapter.setItems(responseBody.products, pageNumber != 1)
-                    }
+        service.getSearchByName(
+            sharedPreferences.getString("currency", "EUR") ?: "EUR",
+            if (query.isBlank()) null else "like:$query",
+            "between%3A${priceRangeSlider.values[0]}%2C${priceRangeSlider.values[1]}",
+            if (upcoming) "in:upcoming" else null,
+            page = pageNumber
+        ).enqueue(object : Callback<Products> {
+            override fun onResponse(call: Call<Products>, response: Response<Products>) {
+                Log.i(tag, "Call refresh body: ${call.request()}")
+                val responseBody = response.body()
+                if (response.isSuccessful && responseBody != null) {
+                    println(responseBody.products)
+                    adapter.setItems(responseBody.products, pageNumber != 1)
                 }
+            }
 
-                override fun onFailure(call: Call<Products>, t: Throwable) {
-                    println(t.message)
-                    Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
-
+            override fun onFailure(call: Call<Products>, t: Throwable) {
+                println(t.message)
+                Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
-    private fun getFollowing(following : Boolean) {
-
-        if (following)
-        {
+    private fun getFollowing(following: Boolean) {
+        if (following) {
             val games = sGameViewModel.getAll()
-            val gamesList:MutableList<Game> = mutableListOf()
+            val gamesList: MutableList<Game> = mutableListOf()
 
             for (game in games) {
                 var finalPrice: String
@@ -252,23 +242,27 @@ class MainActivity : AppCompatActivity() {
                     override fun onResponse(call: okhttp3.Call, responsePrice: okhttp3.Response) {
                         if (responsePrice.isSuccessful) {
                             val html = responsePrice.body()!!.string()
-                            var json = html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
+                            var json =
+                                html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
                             json = json.substring(0, json.indexOf("bonusWalletFunds"))
                             json = json.trim().dropLast(7)
                             json = json.substring(json.indexOf("\"finalPrice\":\""))
-                            finalPrice = (json.split(":\"")[1].toInt()/100f).toString()
+                            finalPrice = (json.split(":\"")[1].toInt() / 100f).toString()
                             finalPrice = checkCurrencyReturnShort(game.currency) + finalPrice
                             Log.i(tag, "finalPrice: $finalPrice")
 
                             productIdService.getProductsByIds(
                                 game.productId.toString()
                             ).enqueue(object : Callback<Game> {
-                                override fun onResponse(call: Call<Game>, response: Response<Game>) {
+                                override fun onResponse(
+                                    call: Call<Game>,
+                                    response: Response<Game>
+                                ) {
                                     print(call.request().toString())
 
                                     val responseBody = response.body()
                                     if (response.isSuccessful && responseBody != null) {
-                                        responseBody.price = Price(finalPrice,"0","0")
+                                        responseBody.price = Price(finalPrice, "0", "0")
                                         Log.i(tag, "Following response body: $responseBody")
                                         gamesList.add(responseBody)
                                         adapter.setItems(gamesList)
@@ -276,7 +270,11 @@ class MainActivity : AppCompatActivity() {
                                 }
 
                                 override fun onFailure(call: Call<Game>, t: Throwable) {
-                                    Toast.makeText(this@MainActivity, "${t.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "${t.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             })
                         }
@@ -287,8 +285,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 })
             }
-        }
-        else{
+        } else {
             refresh()
         }
     }
@@ -304,24 +301,25 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun createNotificationChannel(){
+    private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT)
-                .apply {
-                    lightColor = Color.BLUE
-                    enableLights(true)
-                    enableVibration(true)
-                }
+            val channel =
+                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT)
+                    .apply {
+                        lightColor = Color.BLUE
+                        enableLights(true)
+                        enableVibration(true)
+                    }
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
         }
     }
 
-    private fun checkCurrencyReturnShort(symbol: String) : String {
-        if (symbol == "USD"){
+    private fun checkCurrencyReturnShort(symbol: String): String {
+        if (symbol == "USD") {
             return "$"
         }
-        if (symbol == "EUR"){
+        if (symbol == "EUR") {
             Log.i("Currency", "Euro")
             return "€"
         }
