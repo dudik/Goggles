@@ -2,7 +2,6 @@ package cz.muni.goggles.activities
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import androidx.work.*
@@ -22,6 +21,23 @@ class SettingsActivity : AppCompatActivity()
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val preferencesListener = onSharedPreferenceChangeListener()
+        sharedPreferences.registerOnSharedPreferenceChangeListener(preferencesListener)
+
+        // showing the back button in action bar
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportFragmentManager.beginTransaction().replace(R.id.fragmentContainerView, SettingsFragment()).commit()
+
+    }
+
+    override fun onSupportNavigateUp(): Boolean
+    {
+        finish()
+        return true
+    }
+
+    private fun onSharedPreferenceChangeListener(): SharedPreferences.OnSharedPreferenceChangeListener
+    {
         val preferencesListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
             if (key.equals("repeatInterval"))
             {
@@ -32,23 +48,8 @@ class SettingsActivity : AppCompatActivity()
                     .build()
 
                 WorkManager.getInstance(this).enqueueUniquePeriodicWork("priceCheck", ExistingPeriodicWorkPolicy.REPLACE, priceCheckWorkRequest)
-                Log.i("Settings", "Worker replaced to value ${sharedPreferences.getString("repeatInterval", "4")}")
             }
         }
-
-        sharedPreferences.registerOnSharedPreferenceChangeListener(preferencesListener)
-
-        // showing the back button in action bar
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportFragmentManager.beginTransaction().replace(R.id.fragmentContainerView, SettingsFragment()).commit()
-
-    }
-
-    // this event will enable the back
-    // function to the button on press
-    override fun onSupportNavigateUp(): Boolean
-    {
-        finish()
-        return true
+        return preferencesListener
     }
 }
