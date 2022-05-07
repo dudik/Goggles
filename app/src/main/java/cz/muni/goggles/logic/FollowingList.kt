@@ -67,22 +67,22 @@ private fun extractPriceString(game: SGame, responsePrice: okhttp3.Response): St
 private fun getFollowingAndSetPrice(context: Context, adapter: Adapter, game: SGame, gamesList: MutableList<Game>, finalPrice: String)
 {
     productIdService.getProductsByIds(game.productId.toString()).enqueue(object : Callback<Game>
+    {
+        override fun onResponse(call: Call<Game>, response: Response<Game>)
         {
-            override fun onResponse(call: Call<Game>, response: Response<Game>)
+            print(call.request().toString())
+            val responseBody = response.body()
+            if (response.isSuccessful && responseBody != null)
             {
-                print(call.request().toString())
-                val responseBody = response.body()
-                if (response.isSuccessful && responseBody != null)
-                {
-                    responseBody.price = Price(finalPrice, "0", "0")
-                    gamesList.add(responseBody)
-                    adapter.setItems(gamesList)
-                }
+                responseBody.price = Price(finalPrice, "0", "0")
+                gamesList.add(responseBody)
+                adapter.setItems(gamesList)
             }
+        }
 
-            override fun onFailure(call: Call<Game>, t: Throwable)
-            {
-                Toast.makeText(context, "${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+        override fun onFailure(call: Call<Game>, t: Throwable)
+        {
+            Toast.makeText(context, "${t.message}", Toast.LENGTH_SHORT).show()
+        }
+    })
 }

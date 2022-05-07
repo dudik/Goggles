@@ -26,7 +26,8 @@ import java.text.NumberFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity()
+{
 
     private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
@@ -42,7 +43,8 @@ class MainActivity : AppCompatActivity() {
     private val channelId = "goggles"
     private val channelName = "Price"
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?)
+    {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
@@ -92,28 +94,37 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setPriceSlider() {
+    private fun setPriceSlider()
+    {
         binding.priceRangeSlider.addOnChangeListener { _, _, _ ->
             pageNumber = 1
             updatePrice()
         }
 
-        binding.priceRangeSlider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener {
-            override fun onStartTrackingTouch(slider: RangeSlider) {}
+        binding.priceRangeSlider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener
+        {
+            override fun onStartTrackingTouch(slider: RangeSlider)
+            {
+            }
 
-            override fun onStopTrackingTouch(slider: RangeSlider) {
+            override fun onStopTrackingTouch(slider: RangeSlider)
+            {
                 refresh(this@MainActivity, binding, sharedPreferences, adapter, query, upcoming)
             }
         })
     }
 
-    private fun setRecycler() {
+    private fun setRecycler()
+    {
         binding.recycler.layoutManager = GridLayoutManager(this@MainActivity, 2)
-        binding.recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        binding.recycler.addOnScrollListener(object : RecyclerView.OnScrollListener()
+        {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int)
+            {
                 super.onScrolled(recyclerView, dx, dy)
 
-                if (!recyclerView.canScrollVertically(1) && dy != 0 && (!following && !upcoming)) {
+                if (!recyclerView.canScrollVertically(1) && dy != 0 && (!following && !upcoming))
+                {
                     pageNumber++
                     refresh(this@MainActivity, binding, sharedPreferences, adapter, query, upcoming, pageNumber)
                 }
@@ -124,7 +135,8 @@ class MainActivity : AppCompatActivity() {
         binding.recycler.adapter = adapter
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean
+    {
         menuInflater.inflate(R.menu.menu_scrolling, menu)
 
         val search = menu?.findItem(R.id.nav_search)
@@ -135,13 +147,16 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(searchedString: String?): Boolean {
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener
+        {
+            override fun onQueryTextSubmit(searchedString: String?): Boolean
+            {
                 refresh(this@MainActivity, binding, sharedPreferences, adapter, query, upcoming)
                 return false
             }
 
-            override fun onQueryTextChange(searchedString: String?): Boolean {
+            override fun onQueryTextChange(searchedString: String?): Boolean
+            {
                 query = searchedString ?: ""
                 refresh(this@MainActivity, binding, sharedPreferences, adapter, query, upcoming)
                 return false
@@ -179,7 +194,8 @@ class MainActivity : AppCompatActivity() {
     {
         val priceCheckWorkRequest: WorkRequest = PeriodicWorkRequestBuilder<PriceCheckWorker>(
             sharedPreferences.getString("repeatInterval", "4")!!.toLong(), TimeUnit.HOURS).addTag("PRICE_CHECK")
-            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build()
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .build()
 
         WorkManager.getInstance(this).enqueue(priceCheckWorkRequest)
     }
@@ -193,15 +209,15 @@ class MainActivity : AppCompatActivity() {
             R.string.price, numberFormat.format(binding.priceRangeSlider.values[0]), numberFormat.format(binding.priceRangeSlider.values[1]))
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel =
-                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT)
-                    .apply {
-                        lightColor = Color.BLUE
-                        enableLights(true)
-                        enableVibration(true)
-                    }
+    private fun createNotificationChannel()
+    {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT).apply {
+                lightColor = Color.BLUE
+                enableLights(true)
+                enableVibration(true)
+            }
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
         }

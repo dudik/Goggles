@@ -6,7 +6,8 @@ import androidx.room.Insert
 import androidx.room.Query
 
 @Dao
-interface SGameDao {
+interface SGameDao
+{
 
     @Insert
     suspend fun insert(game: SGame)

@@ -1,20 +1,26 @@
 package cz.muni.goggles.logic
 
-fun convertCurrencyToSymbol(symbol: String): String {
-    if (symbol == "USD") {
+fun convertCurrencyToSymbol(symbol: String): String
+{
+    if (symbol == "USD")
+    {
         return "$"
     }
-    if (symbol == "EUR") {
+    if (symbol == "EUR")
+    {
         return "€"
     }
     return ""
 }
 
-fun convertSymbolToCurrency(symbol: Char): String {
-    if (symbol == '$') {
+fun convertSymbolToCurrency(symbol: Char): String
+{
+    if (symbol == '$')
+    {
         return "USD"
     }
-    if (symbol == '€') {
+    if (symbol == '€')
+    {
         return "EUR"
     }
     return ""

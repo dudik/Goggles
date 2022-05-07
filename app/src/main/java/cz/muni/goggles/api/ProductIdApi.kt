@@ -5,9 +5,9 @@ import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-interface ProductIdApi {
+interface ProductIdApi
+{
     @GET("products/{ids}")
     fun getProductsByIds(
-        @Path("ids") ids: String
-    ): Call<Game>
+        @Path("ids") ids: String): Call<Game>
 }

@@ -25,7 +25,8 @@ import org.json.JSONObject
 import java.io.IOException
 
 
-class GameDetailActivity : AppCompatActivity() {
+class GameDetailActivity : AppCompatActivity()
+{
 
     private lateinit var binding: ActivityGameDetailBinding
     private val sGameViewModel: SGameViewModel by viewModels {
@@ -33,7 +34,8 @@ class GameDetailActivity : AppCompatActivity() {
     }
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?)
+    {
         super.onCreate(savedInstanceState)
 
         binding = ActivityGameDetailBinding.inflate(layoutInflater)
@@ -42,22 +44,23 @@ class GameDetailActivity : AppCompatActivity() {
         val client = OkHttpClient()
 
         println("https://www.gog.com/en/game/" + intent.getStringExtra("slug"))
-        val request = Request.Builder()
-            .url("https://www.gog.com/en/game/" + intent.getStringExtra("slug")!!.replace("-", "_"))
-            .build()
+        val request = Request.Builder().url("https://www.gog.com/en/game/" + intent.getStringExtra("slug")!!.replace("-", "_")).build()
 
-        client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
+        client.newCall(request).enqueue(object : okhttp3.Callback
+        {
+            override fun onFailure(call: okhttp3.Call, e: IOException)
+            {
                 e.printStackTrace()
                 println("CHYBA")
             }
 
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                if (response.body() != null) {
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response)
+            {
+                if (response.body() != null)
+                {
                     val html = response.body()!!.string()
 
-                    var json =
-                        html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
+                    var json = html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
                     println(json)
                     json = json.substring(0, json.indexOf("cardProductId:"))
                     json = json.trim().dropLast(1)
@@ -66,8 +69,7 @@ class GameDetailActivity : AppCompatActivity() {
                     val description = gameDetail.getString("description")
                     val image = gameDetail.get("galaxyBackgroundImage").toString()
                     runOnUiThread {
-                        findViewById<TextView>(R.id.descriptionView).text =
-                            HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_COMPACT)
+                        findViewById<TextView>(R.id.descriptionView).text = HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_COMPACT)
                         val lay = findViewById<ImageView>(R.id.image_cover)
                         Picasso.get().load(image).into(lay)
                     }
@@ -76,7 +78,8 @@ class GameDetailActivity : AppCompatActivity() {
         })
 
         var slug = ""
-        if (!intent.getStringExtra("slug").isNullOrEmpty()) {
+        if (!intent.getStringExtra("slug").isNullOrEmpty())
+        {
             slug = intent.getStringExtra("slug")!!.replace("-", "_")
         }
 
@@ -99,16 +102,20 @@ class GameDetailActivity : AppCompatActivity() {
             startActivity(blankIntent)
         }
 
-        if (gameFromDatabase != null) {
+        if (gameFromDatabase != null)
+        {
             binding.fab.setImageResource(R.drawable.ic_baseline_notifications_24)
             binding.fab.setColorFilter(Color.rgb(255, 51, 51))
         }
 
         binding.fab.setOnClickListener {
             gameFromDatabase = sGameViewModel.getGame(slug)
-            if (gameFromDatabase == null) {
+            if (gameFromDatabase == null)
+            {
                 selectPriceForAlert(slug, gameTitle!!)
-            } else {
+            }
+            else
+            {
                 sGameViewModel.delete(gameFromDatabase!!)
                 binding.fab.setImageResource(R.drawable.ic_baseline_notifications_none_24)
                 binding.fab.setColorFilter(Color.WHITE)
@@ -121,7 +128,8 @@ class GameDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun selectPriceForAlert(slug: String, gameTitle: String) {
+    private fun selectPriceForAlert(slug: String, gameTitle: String)
+    {
         var selectedPrice = 0
         val dialogBuilder = AlertDialog.Builder(this)
         val pricePopupView = layoutInflater.inflate(R.layout.popup, null)
@@ -134,41 +142,30 @@ class GameDetailActivity : AppCompatActivity() {
         val currency = intent.getStringExtra("price")!!.first()
 
         val listOfItems = arrayOf(
-            "5 $currency",
-            "10 $currency",
-            "15 $currency",
-            "20 $currency",
-            "25 $currency",
-            "30 $currency",
-            "35 $currency",
-            "40 $currency"
-        )
+            "5 $currency", "10 $currency", "15 $currency", "20 $currency", "25 $currency", "30 $currency", "35 $currency", "40 $currency")
         val arrayAdapter = ArrayAdapter(this, R.layout.custom_spinner, listOfItems)
         arrayAdapter.setDropDownViewResource(R.layout.custom_spinner_dropdown)
         spinner!!.adapter = arrayAdapter
 
 
         spinner.adapter
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
+        {
             override fun onItemSelected(
-                adapterView: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                selectedPrice =
-                    adapterView?.getItemAtPosition(position).toString().dropLast(2).toInt()
+                adapterView: AdapterView<*>?, view: View?, position: Int, id: Long)
+            {
+                selectedPrice = adapterView?.getItemAtPosition(position).toString().dropLast(2).toInt()
             }
 
-            override fun onNothingSelected(p0: AdapterView<*>?) {
+            override fun onNothingSelected(p0: AdapterView<*>?)
+            {
 
             }
         }
 
         pricePopupView.findViewById<Button>(R.id.okButton).setOnClickListener {
             val sGame = SGame(
-                slug.replace("-", "_"), gameTitle, intent.getIntExtra("productId", 0), selectedPrice, convertSymbolToCurrency(currency)
-            )
+                slug.replace("-", "_"), gameTitle, intent.getIntExtra("productId", 0), selectedPrice, convertSymbolToCurrency(currency))
             sGameViewModel.insert(sGame)
             binding.fab.setImageResource(R.drawable.ic_baseline_notifications_24)
             binding.fab.setColorFilter(Color.rgb(255, 51, 51))
