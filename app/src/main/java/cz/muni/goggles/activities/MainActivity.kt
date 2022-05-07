@@ -11,7 +11,6 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.SearchView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -30,8 +29,9 @@ import cz.muni.goggles.classes.Price
 import cz.muni.goggles.classes.Products
 import cz.muni.goggles.database.SGameViewModel
 import cz.muni.goggles.database.SGameViewModelFactory
+import cz.muni.goggles.databinding.ActivityMainBinding
+import cz.muni.goggles.logic.convertCurrencyToSymbol
 import cz.muni.goggles.worker.PriceCheckWorker
-import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import retrofit2.Call
@@ -58,8 +58,7 @@ class MainActivity : AppCompatActivity() {
         SGameViewModelFactory((application as SGameApplication).repository)
     }
 
-    private lateinit var priceTextView: TextView
-    private lateinit var priceRangeSlider: RangeSlider
+    private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: Adapter
 
     private var query: String = ""
@@ -75,7 +74,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+
+        setContentView(view)
         createNotificationChannel()
 
         setActivityIfStartedFromNotification()
@@ -94,7 +96,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setCheckBoxes() {
-        checkBoxUpcoming.setOnCheckedChangeListener { _, checked ->
+        binding.checkBoxUpcoming.setOnCheckedChangeListener { _, checked ->
             pageNumber = 1
             upcoming = checked
             if (following) {
@@ -104,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        checkBoxFollowing.setOnCheckedChangeListener { _, checked ->
+        binding.checkBoxFollowing.setOnCheckedChangeListener { _, checked ->
             pageNumber = 1
             following = checked
             getFollowing(following)
@@ -112,12 +114,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setPriceSlider() {
-        priceRangeSlider.addOnChangeListener { _, _, _ ->
+        binding.priceRangeSlider.addOnChangeListener { _, _, _ ->
             pageNumber = 1
             updatePrice()
         }
 
-        priceRangeSlider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener {
+        binding.priceRangeSlider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: RangeSlider) {}
 
             override fun onStopTrackingTouch(slider: RangeSlider) {
@@ -127,8 +129,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setRecycler() {
-        recycler.layoutManager = GridLayoutManager(this@MainActivity, 2)
-        recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        binding.recycler.layoutManager = GridLayoutManager(this@MainActivity, 2)
+        binding.recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
@@ -140,7 +142,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         adapter = Adapter()
-        recycler.adapter = adapter
+        binding.recycler.adapter = adapter
     }
 
     private fun setActivityIfStartedFromNotification() {
@@ -150,7 +152,7 @@ class MainActivity : AppCompatActivity() {
             isStartedFromNotification = extras.getBoolean("fromNotification")
         }
         if (isStartedFromNotification) {
-            checkBoxFollowing.isChecked = true
+            binding.checkBoxFollowing.isChecked = true
             following = true
         }
     }
@@ -177,13 +179,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(p0: String?): Boolean {
+            override fun onQueryTextSubmit(searchedString: String?): Boolean {
                 refresh()
                 return false
             }
 
-            override fun onQueryTextChange(p0: String?): Boolean {
-                query = p0 ?: ""
+            override fun onQueryTextChange(searchedString: String?): Boolean {
+                query = searchedString ?: ""
+                refresh()
                 return false
             }
         })
@@ -202,7 +205,7 @@ class MainActivity : AppCompatActivity() {
         service.getSearchByName(
             sharedPreferences.getString("currency", "EUR") ?: "EUR",
             if (query.isBlank()) null else "like:$query",
-            "between%3A${priceRangeSlider.values[0]}%2C${priceRangeSlider.values[1]}",
+            "between%3A${binding.priceRangeSlider.values[0]}%2C${binding.priceRangeSlider.values[1]}",
             if (upcoming) "in:upcoming" else null,
             page = pageNumber
         ).enqueue(object : Callback<Products> {
@@ -244,7 +247,7 @@ class MainActivity : AppCompatActivity() {
                             json = json.trim().dropLast(7)
                             json = json.substring(json.indexOf("\"finalPrice\":\""))
                             finalPrice = (json.split(":\"")[1].toInt() / 100f).toString()
-                            finalPrice = checkCurrencyReturnShort(game.currency) + finalPrice
+                            finalPrice = convertCurrencyToSymbol(game.currency) + finalPrice
                             Log.i(tag, "finalPrice: $finalPrice")
 
                             productIdService.getProductsByIds(
@@ -290,10 +293,8 @@ class MainActivity : AppCompatActivity() {
         val numberFormat = NumberFormat.getCurrencyInstance()
         numberFormat.currency = Currency.getInstance(sharedPreferences.getString("currency", "EUR"))
 
-        priceTextView.text = getString(
-            R.string.price,
-            numberFormat.format(priceRangeSlider.values[0]),
-            numberFormat.format(priceRangeSlider.values[1])
+        binding.priceTextView.text = getString(
+            R.string.price, numberFormat.format(binding.priceRangeSlider.values[0]), numberFormat.format(binding.priceRangeSlider.values[1])
         )
     }
 
@@ -311,14 +312,5 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkCurrencyReturnShort(symbol: String): String {
-        if (symbol == "USD") {
-            return "$"
-        }
-        if (symbol == "EUR") {
-            Log.i("Currency", "Euro")
-            return "€"
-        }
-        return ""
-    }
+
 }

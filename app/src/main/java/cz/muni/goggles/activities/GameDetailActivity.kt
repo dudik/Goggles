@@ -18,6 +18,7 @@ import cz.muni.goggles.database.SGame
 import cz.muni.goggles.database.SGameViewModel
 import cz.muni.goggles.database.SGameViewModelFactory
 import cz.muni.goggles.databinding.ActivityGameDetailBinding
+import cz.muni.goggles.logic.convertSymbolToCurrency
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -164,13 +165,9 @@ class GameDetailActivity : AppCompatActivity() {
             }
         }
 
-        pricePopupView.findViewById<Button>(R.id.okButton).setOnClickListener { view ->
+        pricePopupView.findViewById<Button>(R.id.okButton).setOnClickListener {
             val sGame = SGame(
-                slug.replace("-", "_"),
-                gameTitle,
-                intent.getIntExtra("productId", 0),
-                selectedPrice,
-                checkCurrencyReturnLong(currency)
+                slug.replace("-", "_"), gameTitle, intent.getIntExtra("productId", 0), selectedPrice, convertSymbolToCurrency(currency)
             )
             sGameViewModel.insert(sGame)
             binding.fab.setImageResource(R.drawable.ic_baseline_notifications_24)
@@ -179,18 +176,4 @@ class GameDetailActivity : AppCompatActivity() {
             dialog.dismiss()
         }
     }
-
-    private fun checkCurrencyReturnLong(symbol: Char): String {
-        if (symbol == '$') {
-            Log.i("Currency", "Dollar")
-            return "USD"
-        }
-        if (symbol == '€') {
-            Log.i("Currency", "Euro")
-            return "EUR"
-        }
-        Log.i("Currency", "Empty")
-        return ""
-    }
-
 }
