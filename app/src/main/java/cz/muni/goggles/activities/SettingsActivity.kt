@@ -28,13 +28,14 @@ class SettingsActivity : AppCompatActivity()
                 val priceCheckWorkRequest: PeriodicWorkRequest = PeriodicWorkRequestBuilder<PriceCheckWorker>(
                     sharedPreferences.getString("repeatInterval", "4")!!.toLong(), TimeUnit.HOURS).addTag("PRICE_CHECK")
                     .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                    .setInitialDelay(sharedPreferences.getString("repeatInterval", "4")!!.toLong(), TimeUnit.HOURS)
                     .build()
 
                 WorkManager.getInstance(this).enqueueUniquePeriodicWork("priceCheck", ExistingPeriodicWorkPolicy.REPLACE, priceCheckWorkRequest)
                 Log.i("Settings", "Worker replaced to value ${sharedPreferences.getString("repeatInterval", "4")}")
             }
         }
-        
+
         sharedPreferences.registerOnSharedPreferenceChangeListener(preferencesListener)
 
         // showing the back button in action bar
