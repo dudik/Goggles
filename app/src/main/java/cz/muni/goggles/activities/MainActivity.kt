@@ -39,6 +39,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.io.Console
 import java.io.IOException
 import java.text.NumberFormat
 import java.util.*
@@ -67,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     private var upcoming = false
     private var following = false
     private var isStartedFromNotification = false
+    private var pageNumber = 1
 
     private val channelId = "channelID"
     private val channelName = "Subscription"
@@ -96,14 +98,27 @@ class MainActivity : AppCompatActivity() {
         context = applicationContext
         val recyclerView = findViewById<RecyclerView>(R.id.recycler)
         recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 2)
+
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (!recyclerView.canScrollVertically(1)) {
+                    println("SCROLL")
+                    pageNumber++
+                    refresh(pageNumber)
+                }
+            }
+        })
+
         adapter = Adapter()
         recyclerView.adapter = adapter
-
 
         priceRangeSlider = findViewById(R.id.priceRangeSlider)
         priceTextView = findViewById(R.id.priceTextView)
 
         priceRangeSlider.addOnChangeListener { _, _, _ ->
+            pageNumber = 1
             updatePrice()
         }
 
@@ -119,6 +134,7 @@ class MainActivity : AppCompatActivity() {
 
 
         checkboxUpcoming.setOnCheckedChangeListener { _, checked ->
+            pageNumber = 1
             upcoming = checked
             if (following)
             {
@@ -131,6 +147,7 @@ class MainActivity : AppCompatActivity() {
 
 
         checkboxFollowing.setOnCheckedChangeListener { _, checked ->
+            pageNumber = 1
             following = checked
             getFollowing(following)
         }
@@ -194,19 +211,20 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun refresh() {
+    private fun refresh(pageNumber: Int = 1) {
             service.getSearchByName(
                 sharedPreferences.getString("currency", "EUR") ?: "EUR",
                 if (query.isBlank()) null else "like:$query",
                 "between%3A${priceRangeSlider.values[0]}%2C${priceRangeSlider.values[1]}",
-                if (upcoming) "in:upcoming" else null
+                if (upcoming) "in:upcoming" else null,
+                page = pageNumber
             ).enqueue(object : Callback<Products> {
                 override fun onResponse(call: Call<Products>, response: Response<Products>) {
                     Log.i(tag, "Call refresh body: ${call.request()}")
                     val responseBody = response.body()
                     if (response.isSuccessful && responseBody != null) {
                         println(responseBody.products)
-                        adapter.setItems(responseBody.products)
+                        adapter.setItems(responseBody.products, pageNumber != 1)
                     }
                 }
 

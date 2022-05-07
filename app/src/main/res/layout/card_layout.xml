@@ -49,6 +49,7 @@
                 android:background="#6E1D72"
                 android:padding="5dp"
                 android:text="TextView"
+                android:textColor="#FFFFFF"
                 android:textSize="15sp"
                 tools:visibility="gone" />
 

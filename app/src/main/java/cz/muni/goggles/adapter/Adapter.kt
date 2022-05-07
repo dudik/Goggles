@@ -69,13 +69,13 @@ class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
         return list.size
     }
 
-    fun setItems(games: List<Game>) {
-        list.clear()
+    fun setItems(games: List<Game>, append: Boolean = false) {
+        if (!append)
+            list.clear()
+
         list.addAll(games)
         notifyDataSetChanged()
     }
-
-
 
     class ViewHolder(ItemView: View) : RecyclerView.ViewHolder(ItemView) {
         val imageView: ImageView = itemView.findViewById(R.id.imageView)

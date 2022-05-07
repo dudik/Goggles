@@ -12,6 +12,10 @@ interface CatalogApi {
         @Query("query") query: String?,
         @Query("price", encoded = true) priceRange: String,
         @Query("releaseStatuses") upcoming: String?,
-        @Query("countryCode") countryCode: String = "SK"
+        @Query("countryCode") countryCode: String = "SK",
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 48,
+        @Query("order") order: String = "desc:trending",
+        @Query("productType") productType: String = "in:game,pack"
     ): Call<Products>
 }
