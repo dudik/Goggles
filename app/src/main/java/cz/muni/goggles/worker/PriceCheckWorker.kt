@@ -20,7 +20,7 @@ import java.util.concurrent.CountDownLatch
 class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters) :
     Worker(appContext, workerParams) {
 
-    private val channelId = "channelID"
+    private val channelId = "goggles"
     private val notificationId = 0
     val context = appContext
 
@@ -86,9 +86,14 @@ class PriceCheckWorker(appContext: Context, workerParams: WorkerParameters) :
 
         if (finalGames.isNotEmpty())
         {
-            val notification =
-                NotificationCompat.Builder(context, channelId).setContentIntent(resultPendingIntent).setContentTitle("Great price").setContentText("Buy ${finalGames.joinToString(", ")} now")
-                    .setSmallIcon(R.drawable.ic_baseline_notifications_24).setPriority(NotificationCompat.PRIORITY_HIGH).build()
+            val notification = NotificationCompat.Builder(context, channelId)
+                .setContentIntent(resultPendingIntent)
+                .setContentTitle("Great price")
+                .setContentText("Buy ${finalGames.joinToString(", ")} now")
+                .setSmallIcon(R.drawable.ic_baseline_notifications_24)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .build()
 
             with(NotificationManagerCompat.from(context)) {
                 notify(notificationId, notification)

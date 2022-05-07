@@ -192,12 +192,12 @@ class MainActivity : AppCompatActivity()
 
     private fun setWorkerForPriceCheck()
     {
-        val priceCheckWorkRequest: WorkRequest = PeriodicWorkRequestBuilder<PriceCheckWorker>(
+        val priceCheckWorkRequest: PeriodicWorkRequest = PeriodicWorkRequestBuilder<PriceCheckWorker>(
             sharedPreferences.getString("repeatInterval", "4")!!.toLong(), TimeUnit.HOURS).addTag("PRICE_CHECK")
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .build()
 
-        WorkManager.getInstance(this).enqueue(priceCheckWorkRequest)
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("priceCheck", ExistingPeriodicWorkPolicy.KEEP, priceCheckWorkRequest)
     }
 
     private fun updatePrice()

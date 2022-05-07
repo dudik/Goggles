@@ -22,7 +22,7 @@
         android:icon="@drawable/ic_baseline_access_time_24"
         android:key="repeatInterval"
         android:title="@string/limit"
-        app:defaultValue=""
+        app:defaultValue="4"
         app:useSimpleSummaryProvider="true"
         />
 </androidx.preference.PreferenceScreen>
