@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.activity.viewModels
@@ -24,7 +23,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
 
-
+// TODO refactor
 class GameDetailActivity : AppCompatActivity()
 {
 
@@ -42,26 +41,16 @@ class GameDetailActivity : AppCompatActivity()
         setContentView(binding.root)
 
         val client = OkHttpClient()
-
-        println("https://www.gog.com/en/game/" + intent.getStringExtra("slug"))
         val request = Request.Builder().url("https://www.gog.com/en/game/" + intent.getStringExtra("slug")!!.replace("-", "_")).build()
 
         client.newCall(request).enqueue(object : okhttp3.Callback
         {
-            override fun onFailure(call: okhttp3.Call, e: IOException)
-            {
-                e.printStackTrace()
-                println("CHYBA")
-            }
-
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response)
             {
                 if (response.body() != null)
                 {
                     val html = response.body()!!.string()
-
                     var json = html.substring(html.indexOf("cardProduct: ") + "cardProduct: ".length)
-                    println(json)
                     json = json.substring(0, json.indexOf("cardProductId:"))
                     json = json.trim().dropLast(1)
 
@@ -75,6 +64,11 @@ class GameDetailActivity : AppCompatActivity()
                     }
                 }
             }
+
+            override fun onFailure(call: okhttp3.Call, e: IOException)
+            {
+                e.printStackTrace()
+            }
         })
 
         var slug = ""
@@ -83,12 +77,7 @@ class GameDetailActivity : AppCompatActivity()
             slug = intent.getStringExtra("slug")!!.replace("-", "_")
         }
 
-        Log.i("DetailLog", "Slug detail: $slug")
-
         var gameFromDatabase = sGameViewModel.getGame(slug)
-
-        Log.i("DetailLog", "gameFromDatabase: $gameFromDatabase")
-
         val gameTitle = intent.getStringExtra("title")
         this.title = gameTitle
 
